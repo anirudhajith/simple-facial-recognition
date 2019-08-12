@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>
+        Face Recognition
+    </title>
+</head>
+
+
+<body>
+
+    <p>
+        <label>URL: </label>
+        <input type="text" id="url"></input>
+        <button onclick="process()">Submit</button>
+    </p>
+
+    <img id="image" onload="loadImage()" style="display: none" />
+    <canvas id="myCanvas">
+
+
+        <script>
+            var jsonArray;
+            function process() {
+                document.getElementsByTagName("body")[0].style.cursor = 'wait';
+                url = document.getElementById("url").value;
+                apiURL = "/recognize?url=" + url;
+
+                if (url !== "") {
+
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function () {
+                        if (this.readyState == 4 && this.status == 200) {
+                            jsonArray = JSON.parse(this.responseText);
+                            document.getElementById("image").src = "/image?t=" + Date.now();
+                        }
+                    };
+                    xhttp.open("GET", apiURL, true);
+                    xhttp.send();
+
+
+
+                } else {
+                    alert("Enter valid url");
+                }
+            }
+
+
+            function loadImage() {
+                console.log("image loaded");
+                document.getElementsByTagName("body")[0].style.cursor = 'auto';
+                var c = document.getElementById("myCanvas");
+                var ctx = c.getContext("2d");
+                var img = document.getElementById("image");
+                c.width = img.naturalWidth;
+                c.height = img.naturalHeight;
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.drawImage(img, 0, 0);
+
+                ctx.beginPath();
+
+                jsonArray.forEach(function (element, i) {
+                    box = element.box;
+                    ctx.strokeStyle = 'red';
+                    ctx.fillStyle = "red";
+                    ctx.rect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+                    ctx.font = "15px Arial";
+
+                    if (element.confidence > 85) {
+                        ctx.fillText(element.name + "(" + element.confidence + "%)", box.x1, box.y1 - 10);
+                    } else {
+                        ctx.fillText("UNKNOWN", box.x1, box.y1 - 10);
+                    }
+                    ctx.lineWidth = 4;
+
+                    ctx.stroke();
+                });
+
+
+
+            }
+
+
+        </script>
+</body>
+
+
+
+</html>
