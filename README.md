@@ -1,10 +1,14 @@
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib import parse
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 import keras
 import cv2
 import os
-import sys
+from random import choice, shuffle
 from mtcnn.mtcnn import MTCNN
+from matplotlib import pyplot as plt
 from keras.models import load_model
 from PIL import Image
 from scipy.special import softmax
@@ -21,7 +25,7 @@ def get_embedding(face):
     yhat = facenet_model.predict(sample)
     return yhat
 
-def extract_faces_from_file(filename, required_size=(160, 160)):
+def extract_faces_from_file(filename, required_size=(160, 160), verbose = False):
     
     image = Image.open(filename)
     
@@ -33,8 +37,15 @@ def extract_faces_from_file(filename, required_size=(160, 160)):
     image = image.convert('RGB')
     pixels = np.asarray(image)
     
+    if verbose:
+        plt.imshow(pixels)
+        plt.show()
+    
     detector = MTCNN()
     results = detector.detect_faces(pixels)
+    
+    if verbose:
+        print(len(results), "faces detected")
     
     faces = []
     
@@ -49,13 +60,8 @@ def extract_faces_from_file(filename, required_size=(160, 160)):
     
     return faces
 
-
-if os.path.isfile('./model/facenet_keras.h5'): 
-    print("Loading model...")
-    facenet_model = load_model('./model/facenet_keras.h5')
-else:
-    print("Model not found. Please download from github.com/anirudhajith/attendance-system.git")
-    sys.exit(-1)
+print("Loading model...")
+facenet_model = load_model('./model/facenet_keras.h5')
 
 print("Generating vectors...")
 people_list = os.listdir('./res/targets/')

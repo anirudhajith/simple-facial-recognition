@@ -1,14 +1,13 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib import parse
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 import keras
 import cv2
 import os
-from random import choice, shuffle
+import sys
+from random import shuffle
 from mtcnn.mtcnn import MTCNN
-from matplotlib import pyplot as plt
 from keras.models import load_model
 from PIL import Image
 from scipy.special import softmax
@@ -163,6 +162,12 @@ def run():
     print('Server running at localhost:8080...')
     httpd.serve_forever()
 
+target_list = os.listdir('./res/vectors/')
+
+if len(target_list) == 0:
+    print("Vectors are missing. Please run generateVectors.py")
+    sys.exit(-1)
+
 print("Loading model...")
 facenet_model = load_model('./model/facenet_keras.h5')
 
@@ -170,7 +175,7 @@ print("Loading targets...")
     
 target_list = os.listdir('./res/vectors/')
 targets = np.zeros((len(target_list), 128))
-    
+
 for index in range(len(target_list)):
     print('./res/vectors/' + target_list[index])
     vector = np.load('./res/vectors/' + target_list[index])        
@@ -179,24 +184,5 @@ for index in range(len(target_list)):
 people_list = [t.split(".")[0] for t in target_list]
 
 print("")
-
-
-
-"""
-
-
-[
-    {name: , confidence: , box: 
-        {
-            x1:,
-            y1:,
-            x2:,
-            y2:    
-        }
-    }    
-]
-"""
-    
-
 
 run()
