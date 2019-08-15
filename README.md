@@ -14,6 +14,26 @@ sudo pip3 install opencv-python
 sudo pip3 install mtcnn
 ```
 
+## Usage:
+Use the command `python3 server.py` to start the server on `localhost:8080`. Feed in the url to an image and hit Submit to view the results.
+
+Facial recognition currently works on 
+* Abdul Kalam
+* Barack Obama
+* Benedict Cumberbatch
+* Donald Glover
+* Emma Watson
+* George Clooney
+* Hillary Clinton
+* Hugh Laurie
+* Indira Gandhi
+* Kiera Knightley
+* Meryl Streep
+* Neil DeGrasse Tyson
+* Nelson Mandela
+* Rowan Atkinson
+
+To add a new person, create a new folder (titled their name) under `res/targets/` and save one picture of the person inside it. Next, run `python3 generateVectors.py` and restart the server.
 
 
 
