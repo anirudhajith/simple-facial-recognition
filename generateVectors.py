@@ -21,24 +21,21 @@ def get_embedding(face_image_array):
     embedding = facenet_model.predict(sample)
     return embedding
 
-def extract_faces_from_file(filename, required_size=(160, 160)):
+def extract_face_from_file(filename, required_size=(160, 160)):
     
     image = Image.open(filename).convert('RGB')
     pixels = np.asarray(image)
     
     detector = MTCNN()
     results = detector.detect_faces(pixels)
+    face_data_item = results[0]
     
-    faces = []
-    for face_data_item in results:
-        x1, y1, width, height = face_data_item['box']
-        x1, y1 = abs(x1), abs(y1)
-        x2, y2 = x1 + width, y1 + height
-        
-        face_image = Image.fromarray(pixels[y1:y2, x1:x2]).resize(required_size)
-        faces.append((np.asarray(face_image), (x1, y1, x2, y2)))
-    
-    return faces
+    x1, y1, width, height = face_data_item['box']
+    x1, y1 = abs(x1), abs(y1)
+    x2, y2 = x1 + width, y1 + height
+    face_image = Image.fromarray(pixels[y1:y2, x1:x2]).resize(required_size)   
+
+    return np.asarray(face_image)
 
 
 if os.path.isfile('./model/facenet_keras.h5'): 
@@ -54,12 +51,11 @@ old_people_set = set(filename.split(".")[0] for filename in os.listdir('./res/ve
 new_people_set = people_set - old_people_set
         
 for person in new_people_set:
-    detected_faces = extract_faces_from_file(
+    detected_face = extract_faces_from_file(
         './res/targets/' + person + '/' + 
         os.listdir('./res/targets/' + person + '/')[0]
-    )[0]
-    face_embedding = get_embedding(detected_faces[0])
+    )
+    face_embedding = get_embedding(detected_face)
     np.save('./res/vectors/' + person, face_embedding)
 
     print('Added ./res/vectors/' + person + ".npy")
-
