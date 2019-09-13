@@ -51,7 +51,7 @@ old_people_set = set(filename.split(".")[0] for filename in os.listdir('./res/ve
 new_people_set = people_set - old_people_set
         
 for person in new_people_set:
-    detected_face = extract_faces_from_file(
+    detected_face = extract_face_from_file(
         './res/targets/' + person + '/' + 
         os.listdir('./res/targets/' + person + '/')[0]
     )
