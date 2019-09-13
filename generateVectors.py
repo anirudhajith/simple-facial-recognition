@@ -13,39 +13,30 @@ from io import BytesIO
 import io
 import json
 
-def get_embedding(face):
-    face = face.astype('float32')
-    mean, std = face.mean(), face.std()
-    face = (face-mean)/std
-    sample = np.expand_dims(face, axis=0)
-    yhat = facenet_model.predict(sample)
-    return yhat
+def get_embedding(face_image_array):
+    face_image_array = face_image_array.astype('float32')
+    mean, std = face_image_array.mean(), face_image_array.std()
+    face_image_array = (face_image_array - mean)/std
+    sample = np.expand_dims(face_image_array, axis=0)
+    embedding = facenet_model.predict(sample)
+    return embedding
 
 def extract_faces_from_file(filename, required_size=(160, 160)):
     
-    image = Image.open(filename)
-    
-    global image_data
-    imgByteArr = io.BytesIO()
-    image.save(imgByteArr, format='PNG')
-    image_data = imgByteArr.getvalue()
-    
-    image = image.convert('RGB')
+    image = Image.open(filename).convert('RGB')
     pixels = np.asarray(image)
     
     detector = MTCNN()
     results = detector.detect_faces(pixels)
     
     faces = []
-    
-    for face in results:
-        x1, y1, width, height = face['box']
+    for face_data_item in results:
+        x1, y1, width, height = face_data_item['box']
         x1, y1 = abs(x1), abs(y1)
         x2, y2 = x1 + width, y1 + height
         
-        image = Image.fromarray(pixels[y1:y2, x1:x2])
-        image = image.resize(required_size)
-        faces.append((np.asarray(image), (x1, y1, x2, y2)))
+        face_image = Image.fromarray(pixels[y1:y2, x1:x2]).resize(required_size)
+        faces.append((np.asarray(face_image), (x1, y1, x2, y2)))
     
     return faces
 
@@ -58,21 +49,17 @@ else:
     sys.exit(-1)
 
 print("Generating vectors...")
-people_list = os.listdir('./res/targets/')
-old_people_list = os.listdir('./res/vectors/')
+people_set = set(os.listdir('./res/targets/'))
+old_people_set = set(filename.split(".")[0] for filename in os.listdir('./res/vectors/'))
+new_people_set = people_set - old_people_set
         
-for index in range(len(people_list)):
-        
-    person = people_list[index]
+for person in new_people_set:
+    detected_faces = extract_faces_from_file(
+        './res/targets/' + person + '/' + 
+        os.listdir('./res/targets/' + person + '/')[0]
+    )[0]
+    face_embedding = get_embedding(detected_faces[0])
+    np.save('./res/vectors/' + person, face_embedding)
 
-    if person + ".npy" not in old_people_list:
-        face = extract_faces_from_file(
-            './res/targets/' + person + '/' + 
-            os.listdir('./res/targets/' + person + '/')[0]
-        )[0]
-            
-        vector = get_embedding(face[0])
-        np.save('./res/vectors/' + person, vector)
-
-    print('./res/vectors/' + person + ".npy")
+    print('Added ./res/vectors/' + person + ".npy")
 
